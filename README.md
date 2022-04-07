@@ -2,9 +2,9 @@ Trying to find and analyse the least viewed articles on English Wikipedia. Inten
 
 ## Data pipeline
 
-In the course of this investigation, I looked at a few different sets of articles. In each case, the set of steps for processing them was basically the same.
+In the course of this investigation, I looked at a few different sets of articles. In each case, the steps for processing them was basically the same.
 
-The first step is to use [Quarry](https://quarry.wmcloud.org/) to run a SQL query which generates a csv file with page metadata. Some of the different datasets and corresponding queries were:
+The first step is to use [Quarry](https://quarry.wmcloud.org/) to run a SQL query which generates a csv file with page metadata. The main datasets and corresponding queries were:
 - [A sample of around 32k articles having contiguous page_random values ranging from 0.5 to 0.505](https://quarry.wmcloud.org/query/62777)
     - NB: This was before I figured out the trick of calculating random gaps directly as part of the SQL query, so this dataset required calculating the gaps as a postprocessing step, using `gaps.py`
 - [Pages in the "Phaegopterina stubs" category](https://quarry.wmcloud.org/query/62881)
