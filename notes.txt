@@ -1,0 +1,141 @@
+[These are stream-of-consciousness notes taken while working on this project. They're currently probably only comprehensible to me, and in a month they will be comprehensible to no-one.]
+
+URL to generate 500 random mainspace articles:
+
+  https://en.wikipedia.org/w/api.php?action=query&format=json&list=random&rnlimit=500&rnnamespace=0
+
+Do I actually need to crawl through the raw pageview dumps? :/
+
+Better angle maybe "What do the least viewed Wikipedia articles look like?"
+
+Generate random list of articles not in dab categories? (Not easy to filter as a post-processing step. Not all will have (disambiguation) in title.)
+
+Is there any data on how frequently people hit the "Random page" button? (Might be able to even come up with an estimate by working backwards.)
+
+Kind of an interesting mathematical problem to grapple with the consequences of the implementation of the "Random article" feature wrt relative probabilities of individual articles being landed on. How big is the difference between the luckiest and unluckiest articles?
+    Do a simulation to get a sense of distribution of gaps?
+    Is the random float field something that can be publicly queried, e.g. through the Wikipedia sql interface thing? (Petscan?) If so, that could be really interesting, to look at the correlation between gap size and pageviews.
+        Looks like the column is called page_random: https://www.mediawiki.org/wiki/Manual:Random_page
+
+TODO: Maybe submit a PR for the mwviews library? e.g. the string key consistency issue.
+
+URL for my mainspace creations:
+    https://en.wikipedia.org/w/api.php?action=query&list=usercontribs&ucuser=Colin_M&ucshow=new&ucnamespace=0&uclimit=500
+Pageviews for my creations in 2022/02:
+https://pageviews.wmcloud.org/massviews/?platform=all-access&agent=user&source=wikilinks&range=last-month&sort=views&direction=1&view=list&target=https://en.wikipedia.org/wiki/User:Colin_M/creations
+
+Wait, it seems like Special:Random avoids dab pages. Is that documented somewhere? How do they do that?
+    I guess this is how it's done. Had to do some deep googling to get there: https://gerrit.wikimedia.org/r/c/mediawiki/extensions/Disambiguator/+/231208/
+
+A lot of the pages at the bottom of the pageview ranking for the 32k quarry sample are abberations (e.g. they were redirects for some or all of 2021). The legit examples with the fewest views seem to be:
+- https://en.wikipedia.org/wiki/Landestoy and https://en.wikipedia.org/wiki/C18H25N5O4 (which are set indices...)
+- https://en.wikipedia.org/wiki/Ren%C3%A9_Crepin seems to be the least-viewed "real" article. ~14 word stub about a cyclist who rode in the 1928 Tour de France. Created Oct 2020. His gap size is 2.175400e-08. i.e. around an order of magnitude smaller than the average. Our set index examples have gaps of 1e-8 and 4e-9. The 10th percentile is 1.6e-8
+
+Quarry query for smallest gaps: https://quarry.wmcloud.org/query/62816
+
+Phaegopterina gaps: https://quarry.wmcloud.org/query/62881
+
+Raw pageviews dataset: https://dumps.wikimedia.org/other/pageviews/readme.html
+Around 40MB per hour of data. Does Wikimedia maintain some public cluster that can be used to query this data?
+
+
+Is the data Zipfian? Look at a log-log rank-frequency plot. (Done in 32k.ipynb. Answer seems to be basically 'no'. Log frequency falls off faster than predicted for high ranks.
+
+## TODOs
+- Figure out a way to exclude (or mark) dab pages. Plenty of options here. e.g. Quarry.
+- Compare dist of pageviews for dab pages vs. content pages
+- Browse some of the least viewed content pages
+- Try to measure the size of their page_random 'window', see if it's significantly lower than avg. (This time definitely need quarry.)
+(you are here)
+- Maybe look at pageviews over all time (or a longer window) for some of the least viewed pages.
+    - Kind of interesting to look at a longer view of views for some of the bottom-of-the-barrel pages for 2021. Tends to be way more views earlier and later. Probably regression towards the mean. i.e. suggests that our hall of shame involves the confluence of *three* factors: obscure topic, unlucky random gap, *and* just a generally unlucky year.
+- What about another experiment of looking at pageviews for all pages in some dusty drawer like "Category:Moths of Asia". This would help confirm the hypothesis that we indeed have a lot of boring moth stubs that no-one reads. Would also give a somewhat controlled setting where we could look at correlation between pageviews and gap size.
+- Related question: What are the "luckiest" pages having the biggest gaps?
+- Start writing up draft.
+    - In Wikitext or md? Targeting wide audience or Signpost audience? idk
+
+Quarry query: https://quarry.wmcloud.org/query/62777
+
+https://en.wikipedia.org/wiki/Weimer_Township got 3 views in 2021. lol.
+
+I wonder if there's some kind of weird observer effect where the absolute bottom of the barrel pages get some views *because* they're the least viewed so weirdos like me investigate them? Probably not. But I do kinda feel like I'm trampling on flowers when I visit these pages now.
+
+Waitwaitwait, here's an idea for how we could actually accomplish the clickbait goal of finding the "least viewed article on Wikipedia" without having to dig through the whole ginormous dataset. Based on our prelim analysis of our 32k sample, we can basically guarantee that the least viewed articles will have very small random gaps. So can we construct a quarry query to select all articles with a random gap below some threshold? That seems like it shoooould be doable...
+
+Maybe the best example found so far of a page which is profoundly unpopular but appears to have had some amount of love put into it:
+    [[New Democratic Party of Manitoba candidates in the 1966 Manitoba provincial election]]
+It at least looks like the creator actually sought out specific sources for this. Does not appear to be part of a formulaic mass-page-creation process. They probably actually typed out most of the words. And there are like... 9 sentences! Definitely stands out from the species and village stubs which seem to be more or less mechanically generated and sourced only to databases or other primary sources.
+Actually, that might not be an entirely fair characterization. Even though most/all of these moth articles seem to have been started as soulless mechanical stubs, in many cases other editors later add thoughtful prose and citations. e.g. see [[Hypatima rhicnota]].
+
+Wait, hold on, this one is fuckin jumping!
+    https://en.wikipedia.org/wiki/Minuscule_941
+Created in 2014 and basically unchanged since then. ~18 footnotes to 10 different sources! Three sections! An image! You better work, Minuscule 941. Though, actually, looks like the creator created a fair number of similar articles with very similar structure, prose, even same image. So... e.g.
+    https://en.wikipedia.org/wiki/Minuscule_940
+Still, this article was actually kind of... interesting? Kind of.
+
+Look at that, a rock band!
+    https://en.wikipedia.org/wiki/DMZ//38
+Hilariously short:
+    https://en.wikipedia.org/wiki/K%C3%A4lberbuckel
+
+https://en.wikipedia.org/wiki/Alapa%CA%BBi
+Any article that includes the text "she had a craving for the eyeball of a shark" cannot be accused of being boring.
+Oh, but this one is a move over redirect thing. :(
+
+Another very funny translated German stub:
+    https://en.wikipedia.org/wiki/Wittstrauch
+
+There's an AfD candidate:
+    https://en.wikipedia.org/wiki/EuroNanoForum_2009
+
+## Pipeline
+
+```
+# Get 1000 random articles, saved to pages.json
+python get_randos.py 1000
+# Creates a file, views.csv, with a row for every page in pages.json, and columns:
+# title, 12 columns for monthly pageviews in 2021, and a final 'total' column summing
+# the previous 12
+python get_views.py
+```
+
+Bottleneck is get_views.py, since it performs one request per page. The API wrapper library I'm using defaults to a threadpool of 10 workers, so we do get the benefit of some parallelism.
+Ballpark: around 50 pages per second.
+
+## Breadcrumbs
+- pages.json: 20k pages grabbed using get_randos.py
+- views_20k.csv: pageviews grabbed by get_views.py based on pages.json 20k sample
+- quarry.csv: 32,480 rows taken from https://quarry.wmcloud.org/query/62777 (contiguous page_random values starting from 0.5)
+    - also views_32k.csv, merged_32k.csv
+    - this is the only slice that includes dab pages
+- 100k_smallest_gaps.csv: mainspace non-redirect/non-dabs with the 100k smallest page_random gaps. (With views_100k.csv being the merged pageview version.)
+- phaeg_gaps.csv: quarry data from articles in the "Phaegopterina stubs" category (a genus of moths). Around 1460 articles.
+    - views_phaeg.csv
+    - merged_phaeg.csv
+    - phaegopterina.csv: daily pageview data downloaded from Massviews
+- dust_links.txt one wikilink per line text file with all 517 pages in the 100k sample having <= 10 2021 pageviews
+
+## Outline
+
+- Hypothesis: there are a *lot* of articles that are essentially equally profoundly uninteresting/obscure. Lots of articles that might plausibly go a whole year with zero people deliberately looking them up. However, all articles are going to get a "floor" on their pageviews as a result of people landing on them by chance after clicking the "Random article" button. (Might actually want to introduce this later on)
+- Full dataset is very big (~6m articles), so let's look at a sample of 32k random articles.
+- Some notes about data sources/processing. Only considering "human" pageviews. Using heuristics to exclude pages that didn't exist for part of 2021.
+- Least viewed pages in the dataset? All disambiguation pages. This is consistent with my hypothesis - Wikipedia explicitly excludes dab pages from consideration for the random article feature.
+    - And it's not just a matter of their content being less interesting. Because we have "set index" pages like Landestoy and C18H25N504 which are functionally indistinguishable from dabs, but really only differ by the fact that they're included in Special:Random.
+- Our sample includes one dab page that got only 3 views over the whole year. Quite plausible that if we looked at the full set of dabs, we would find at least one with 0 views over the whole year.
+- But dab pages aren't "real" articles, so let's exclude them and re-analyze.
+- Now what are the least viewed? Well, a bunch of obscure stubs. Mostly about insect species. One random tour-de-france cyclist from 1928 thrown in for good measure.
+- These are pretty rarely viewed! Only like one view per month! Have to imagine if we had the full dataset rather than our 32k sample, we might be able to find pages that were even less popular. But too much data to sift through...
+- Going back to hypothesis about the random button. Explain quirk about how it's implemented. If my hypothesis is correct, we should see a correlation between gap size and pageview floor. And we do!
+- Now let's specifically target all articles with small randomgaps.
+
+- Personal connection. Cow Tools vs. whatever.
+
+Todos from bottom of first draft:
+TODO: longer time horizon
+
+TODO: luckiest?
+
+TODO: number of random article clicks?
+
+TODO: talk about other floor materials - gnoming
