@@ -1,4 +1,4 @@
-Trying to find and analyse the least viewed articles on English Wikipedia. Intend to turn this into a blog post at some point.
+Trying to find and analyse the least viewed articles on English Wikipedia. See my blog for a writeup of this investigation, [In search of the least viewed article on Wikipedia](https://colinmorris.github.io/blog/unpopular-wiki-articles).
 
 ## Data pipeline
 
